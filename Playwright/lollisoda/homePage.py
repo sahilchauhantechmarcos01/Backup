@@ -1,5 +1,7 @@
 from playwright.sync_api import Page, TimeoutError
 import time
+import random
+import string
 
 def automate_cart_flow(page: Page, base_url: str):
     print(f"Testing Cart Functionality on : {base_url} ")
@@ -129,7 +131,50 @@ def check_hamburger_menu(page: Page, base_url: str):
         print(f"Exception during hamburger menu check: {e}")
         return False
 
+def random_email():
+    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=8)) + "@example.com"
+
+def submit_newsletter(page: Page, base_url):
+    print("\n[TEST] Submitting newsletter email")
+
+    page.goto(base_url, wait_until="load", timeout=60000)
+
+    try:
+        form = page.locator("section:has-text('sign up for 15% off') form.klaviyo-form").first
+        form.wait_for(state="visible", timeout=15000)
+        print("[STEP] Newsletter form visible")
+
+        email = random_email()
+        print(f"[STEP] Generated random email: {email}")
+
+        form.locator("input[type='email']").fill(email)
+        print("[STEP] Email filled")
+
+        submit_button = form.locator("button:has-text('Submit')")
+        submit_button.wait_for(state="visible", timeout=5000)
+        submit_button.click()
+        print("[STEP] Submit button clicked")
+
+        confirmation = page.locator(
+            "text=Thanks! Your 15% off code"
+        )
+
+        confirmation.wait_for(state="visible", timeout=15000)
+        print("[STEP] ✅ Confirmation message appeared")
+        return True
+
+    except TimeoutError:
+        print("[STEP] ❌ Confirmation message did not appear")
+        return False
+    except Exception as e:
+        print(f"[STEP] ⚠️ Exception during newsletter submission: {e}")
+        return False
+
+
+
+
 def homepage_test_lollisoda(page: Page): 
-   check_hamburger_menu(page, "https://www.lollisoda.com/")
+   submit_newsletter(page, "https://www.lollisoda.com/")
+#    check_hamburger_menu(page, "https://www.lollisoda.com/")
 #    automate_cart_flow(page, "https://www.lollisoda.com/")
 #    check_order_online_redirect(page)
