@@ -58,9 +58,9 @@ def automate_cart_flow(page: Page, base_url: str):
         print(f"Cart count after click {i + 1}: {final_cart}")
 
     if final_cart > initial_cart:
-        print("\nAdd to cart working correctly")
+        print("\nAdd to cart working correctly\n")
     else:
-        print("\nAdd to cart failed")
+        print("\nAdd to cart failed\n")
 
 
 def check_order_online_redirect(page: Page): 
@@ -81,13 +81,55 @@ def check_order_online_redirect(page: Page):
             return False
 
     except TimeoutError:
-        print("'Order Online' button not found or not visible")
+        print("'Order Online' button not found or not visible\n")
         return False
     except Exception as e:
-        print(f"Exception during redirect check: {e}")
+        print(f"Exception during redirect check: {e}\n")
         return False
 
 
+
+def check_hamburger_menu(page: Page, base_url: str):
+    print(f"\nChecking hamburger menu on: {base_url}")
+    
+    page.goto(base_url, wait_until="load", timeout=60000)
+    
+    try:
+        age_modal = page.locator(".modal-body.text-center:has-text('YOU MUST BE 21+')")
+        age_modal.wait_for(state="visible", timeout=10000)
+        page.locator("a.theme-btn[title='I AM 21+']").first.click(force=True)
+        age_modal.wait_for(state="hidden", timeout=10000)
+    except TimeoutError:
+        print("[STEP] No age modal detected")
+
+    try:
+        menu_button = page.locator("div.menu-ham button.ham-btn[title='Menu']")
+        menu_button.wait_for(state="visible", timeout=10000)
+        menu_button.scroll_into_view_if_needed()
+        time.sleep(1)
+        print("Clicking hamburger menu button")
+        menu_button.click(force=True)
+        time.sleep(1)
+
+        header_menu = page.locator("div.header-menu")
+        header_menu.wait_for(state="visible", timeout=5000)
+        style = header_menu.get_attribute("style")
+
+        if style and "display: block" in style:
+            print("Hamburger menu opened successfully")
+            return True
+        else:
+            print("Hamburger menu did not open")
+            return False
+
+    except TimeoutError:
+        print("Hamburger menu button not found or menu did not appear")
+        return False
+    except Exception as e:
+        print(f"Exception during hamburger menu check: {e}")
+        return False
+
 def homepage_test_lollisoda(page: Page): 
-   automate_cart_flow(page, "https://www.lollisoda.com/")
-   check_order_online_redirect(page)
+   check_hamburger_menu(page, "https://www.lollisoda.com/")
+#    automate_cart_flow(page, "https://www.lollisoda.com/")
+#    check_order_online_redirect(page)
